@@ -1,4 +1,3 @@
-var myMD = require('../model/thanhtoanvnpay.model');
 
 var objReturn = {
     amount: "1",
@@ -27,10 +26,10 @@ exports.payment = async (req, res, next) => {
     let vnpUrl = config.vnp_Url;
     let returnUrl = config.vnp_ReturnUrl;
     let orderId = moment(date).format('DDHHmmss');
-    let amount = 20000;
-    let bankCode = "NCB";
-    // let amount = req.body.amount;
-    // let bankCode = req.body.bankCode;
+    // let amount = 20000;
+    // let bankCode = "NCB";
+    let amount = req.body.amount;
+    let bankCode = req.body.bankCode;
 
     let locale = "vn";
     let currCode = 'VND';
