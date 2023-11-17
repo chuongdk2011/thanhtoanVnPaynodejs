@@ -93,6 +93,74 @@ exports.ex_return = async (req, res, next) => {
     }
 }
 
+exports.ex_querydata = async (req, res, next) => {
+    process.env.TZ = 'Asia/Ho_Chi_Minh';
+    let date = new Date();
+
+    let config = require('../config/default.json');
+    let crypto = require("crypto");
+    
+    let vnp_TmnCode = config.vnp_TmnCode;
+    let secretKey = config.vnp_HashSecret;
+    let vnp_Api = config.vnp_Api;
+    
+    let vnp_TxnRef = "17090444";
+    // let vnp_TxnRef = req.body.orderId;
+    let vnp_TransactionDate = moment(date).format('YYYYMMDDHHmmss');
+    
+    let vnp_RequestId =moment(date).format('HHmmss');
+    let vnp_Version = '2.1.0';
+    let vnp_Command = 'querydr';
+    let vnp_OrderInfo = 'Truy van GD ma:' + vnp_TxnRef;
+    
+    let vnp_IpAddr = req.headers['x-forwarded-for'] ||
+        req.connection.remoteAddress ||
+        req.socket.remoteAddress ||
+        req.connection.socket.remoteAddress;
+
+    let vnp_currCode = 'VND';
+    let vnp_CreateDate = moment(date).format('YYYYMMDDHHmmss');
+    
+    let data = vnp_RequestId + "|" + vnp_Version + "|" + vnp_Command + "|" + vnp_TmnCode + "|" + vnp_TxnRef + "|" + vnp_TransactionDate + "|" + vnp_CreateDate + "|" + vnp_IpAddr + "|" + vnp_OrderInfo;
+    
+    let hmac = crypto.createHmac("sha512", secretKey);
+    let vnp_SecureHash = hmac.update(new Buffer(data, 'utf-8')).digest("hex"); 
+    
+    let dataObj = {
+        'vnp_RequestId': vnp_RequestId,
+        'vnp_Version': vnp_Version,
+        'vnp_Command': vnp_Command,
+        'vnp_TmnCode': vnp_TmnCode,
+        'vnp_TxnRef': vnp_TxnRef,
+        'vnp_OrderInfo': vnp_OrderInfo,
+        'vnp_TransactionDate': vnp_TransactionDate,
+        'vnp_CreateDate': vnp_CreateDate,
+        'vnp_IpAddr': vnp_IpAddr,
+        'vnp_SecureHash': vnp_SecureHash,
+        'vnp_currCode': vnp_currCode
+    };
+    const axios = require('axios');
+    axios.post(vnp_Api, dataObj)
+    .then(response => {
+        console.log(response.data);
+    })
+    .catch(error => {
+        if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            console.error('Response data:', error.response.data);
+            console.error('Response status:', error.response.status);
+            console.error('Response headers:', error.response.headers);
+        } else if (error.request) {
+            // The request was made but no response was received
+            console.error('No response received');
+        } else {
+            // Something happened in setting up the request that triggered an Error
+            console.error('Error during request setup:', error.message);
+        }
+    });
+}
+
 exports.ex_ipn = async (req, res, next) => {
     let vnp_Params = req.query;
     let secureHash = vnp_Params['vnp_SecureHash'];
@@ -230,14 +298,6 @@ exports.ex_refund = async (req, res, next) =>{
             console.error('Error during request setup:', error.message);
         }
     });
-    // request({
-    //     url: vnp_Api,
-    //     method: "POST",
-    //     json: true,   
-    //     body: dataObj
-    //         }, function (error, response, body){
-    //             console.log(response);
-    //         });
 }
 
 function sortObject(obj) {

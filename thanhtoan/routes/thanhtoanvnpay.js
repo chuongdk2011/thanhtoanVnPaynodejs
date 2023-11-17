@@ -11,4 +11,6 @@ routes.get('/vnpay_ipn', paymentController.ex_ipn);
 routes.get('/vnpay_refund', paymentController.ex_refund);
 routes.post('/vnpay_refund', paymentController.ex_refund);
 
+routes.get('/vnpay_querydata', paymentController.ex_querydata);
+routes.post('/vnpay_querydata', paymentController.ex_querydata);
 module.exports = routes;
